@@ -28,7 +28,9 @@ public:
     void listLoans(bool onlyActive = false) const;
     bool borrowBook(const string& memberId, const string& isbn, const string& borrowDate);
     bool returnBook(const string& memberId, const string& isbn, const string& returnDate);
+    void removeBook(const string& isbn);
+    void removeMember(const string& memberId);
+    Book* searchBook(const string& query);
 };
 
 #endif // LIBRARY_H
-

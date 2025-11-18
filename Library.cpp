@@ -32,7 +32,7 @@ int Library::countActiveLoansForMember(const string& memberId) const {
 bool Library::isBookAvailable(const string& isbn) const {
     for (const auto& loan : loans) {
         if (loan.getIsbn() == isbn && loan.isActive()) {
-            return false; // there is an active loan for this book
+            return false;
         }
     }
     return true;
@@ -108,7 +108,6 @@ bool Library::borrowBook(const string& memberId, const string& isbn, const strin
         return false;
     }
 
-    // Create a new loan record
     loans.push_back(Loan(isbn, memberId, borrowDate));
     cout << "Book borrowed successfully." << endl;
     return true;
@@ -138,3 +137,38 @@ bool Library::returnBook(const string& memberId, const string& isbn, const strin
     return true;
 }
 
+void Library::removeBook(const string& isbn) {
+    for (auto it = books.begin(); it != books.end(); ++it) {
+        if (it->getIsbn() == isbn) {
+            books.erase(it);
+            cout << "Book removed successfully." << endl;
+            return;
+        }
+    }
+    cout << "Book not found." << endl;
+}
+
+void Library::removeMember(const string& memberId) {
+    for (auto it = members.begin(); it != members.end(); ++it) {
+        if (it->getId() == memberId) {
+            members.erase(it);
+            cout << "Member removed successfully." << endl;
+            return;
+        }
+    }
+    cout << "Member not found." << endl;
+}
+
+Book* Library::searchBook(const string& query) {
+    for (auto& book : books) {
+        if (book.getIsbn() == query) {
+            return &book;
+        }
+    }
+    for (auto& book : books) {
+        if (book.getTitle() == query) {
+            return &book;
+        }
+    }
+    return nullptr;
+}
