@@ -19,6 +19,15 @@ Member* Library::findMember(const string& memberId) {
     return nullptr;
 }
 
+CD* Library::findCD(const string& upc) {
+    for (auto& cd : cds) {
+        if (cd.getUpc() == upc) {
+            return &cd;
+        }
+    }
+    return nullptr;
+}
+
 int Library::countActiveLoansForMember(const string& memberId) const {
     int count = 0;
     for (const auto& loan : loans) {
@@ -38,10 +47,30 @@ bool Library::isBookAvailable(const string& isbn) const {
     return true;
 }
 
+bool Library::isCDAvailable(const string& upc) const {
+    for (const auto& loan : loans) {
+        if (loan.getIsbn() == upc && loan.isActive()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 Loan* Library::findActiveLoan(const string& memberId, const string& isbn) {
     for (auto& loan : loans) {
         if (loan.getMemberId() == memberId &&
             loan.getIsbn() == isbn &&
+            loan.isActive()) {
+            return &loan;
+        }
+    }
+    return nullptr;
+}
+
+Loan* Library::findActiveCDLoan(const string& memberId, const string& upc) {
+    for (auto& loan : loans) {
+        if (loan.getMemberId() == memberId &&
+            loan.getIsbn() == upc &&
             loan.isActive()) {
             return &loan;
         }
@@ -57,6 +86,10 @@ void Library::addMember(const Member& member) {
     members.push_back(member);
 }
 
+void Library::addCD(const CD& cd) {
+    cds.push_back(cd);
+}
+
 void Library::listBooks() const {
     cout << "=== Books in library ===" << endl;
     for (const auto& book : books) {
@@ -69,6 +102,14 @@ void Library::listMembers() const {
     cout << "=== Members ===" << endl;
     for (const auto& member : members) {
         member.printInfo();
+    }
+    cout << endl;
+}
+
+void Library::listCDs() const {
+    cout << "=== CDs in library ===" << endl;
+    for (const auto& cd : cds) {
+        cd.printInfo();
     }
     cout << endl;
 }
@@ -137,6 +178,59 @@ bool Library::returnBook(const string& memberId, const string& isbn, const strin
     return true;
 }
 
+bool Library::borrowCD(const string& memberId, const string& upc, const string& borrowDate) {
+    Member* member = findMember(memberId);
+    if (!member) {
+        cout << "Member not found." << endl;
+        return false;
+    }
+
+    CD* cd = findCD(upc);
+    if (!cd) {
+        cout << "CD not found." << endl;
+        return false;
+    }
+
+    if (!isCDAvailable(upc)) {
+        cout << "CD is currently not available." << endl;
+        return false;
+    }
+
+    int activeLoans = countActiveLoansForMember(memberId);
+    if (activeLoans >= member->getMaxBooks()) {
+        cout << "Member has reached the maximum number of active loans." << endl;
+        return false;
+    }
+
+    loans.push_back(Loan(upc, memberId, borrowDate));
+    cout << "CD borrowed successfully." << endl;
+    return true;
+}
+
+bool Library::returnCD(const string& memberId, const string& upc, const string& returnDate) {
+    Member* member = findMember(memberId);
+    if (!member) {
+        cout << "Member not found." << endl;
+        return false;
+    }
+
+    CD* cd = findCD(upc);
+    if (!cd) {
+        cout << "CD not found." << endl;
+        return false;
+    }
+
+    Loan* loan = findActiveCDLoan(memberId, upc);
+    if (!loan) {
+        cout << "No active loan found for this member and CD." << endl;
+        return false;
+    }
+
+    loan->setReturnDate(returnDate);
+    cout << "CD returned successfully." << endl;
+    return true;
+}
+
 void Library::removeBook(const string& isbn) {
     for (auto it = books.begin(); it != books.end(); ++it) {
         if (it->getIsbn() == isbn) {
@@ -159,6 +253,17 @@ void Library::removeMember(const string& memberId) {
     cout << "Member not found." << endl;
 }
 
+void Library::removeCD(const string& upc) {
+    for (auto it = cds.begin(); it != cds.end(); ++it) {
+        if (it->getUpc() == upc) {
+            cds.erase(it);
+            cout << "CD removed successfully." << endl;
+            return;
+        }
+    }
+    cout << "CD not found." << endl;
+}
+
 Book* Library::searchBook(const string& query) {
     for (auto& book : books) {
         if (book.getIsbn() == query) {
@@ -168,6 +273,20 @@ Book* Library::searchBook(const string& query) {
     for (auto& book : books) {
         if (book.getTitle() == query) {
             return &book;
+        }
+    }
+    return nullptr;
+}
+
+CD* Library::searchCD(const string& query) {
+    for (auto& cd : cds) {
+        if (cd.getUpc() == query) {
+            return &cd;
+        }
+    }
+    for (auto& cd : cds) {
+        if (cd.getTitle() == query) {
+            return &cd;
         }
     }
     return nullptr;
